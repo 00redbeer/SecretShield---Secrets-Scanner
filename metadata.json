@@ -1,0 +1,7 @@
+{
+  "name": "SecretShield - Secrets Scanner",
+  "description": "A high-performance secrets scanning platform for GitHub repositories, seeds, and local code using TruffleHog engines with real-time analytics.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

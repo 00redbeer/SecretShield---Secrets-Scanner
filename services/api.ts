@@ -14,70 +14,104 @@ const seedInitialData = () => {
 
   const initialScans: ScanJob[] = [
     {
-      id: 'demo-1',
+      id: 'scan-001',
       type: ScanType.REPO,
-      target: 'facebook/react',
+      target: 'personal-project/e-commerce-backend',
       status: ScanStatus.COMPLETED,
       progress: 100,
-      criticalCount: 2,
-      lowCount: 5,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
+      criticalCount: 3,
+      lowCount: 2,
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(), // 4 hours ago
     },
     {
-      id: 'demo-2',
+      id: 'scan-002',
       type: ScanType.SEED,
-      target: 'acme-corp-org',
+      target: 'startup-inc-org',
       status: ScanStatus.COMPLETED,
       progress: 100,
-      criticalCount: 0,
-      lowCount: 12,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
+      criticalCount: 1,
+      lowCount: 18,
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 28).toISOString(), // ~1 day ago
     },
     {
-      id: 'demo-3',
+      id: 'scan-003',
       type: ScanType.UPLOAD,
-      target: 'legacy-backend.zip',
+      target: 'legacy-site-backup.zip',
       status: ScanStatus.RUNNING,
-      progress: 45,
-      criticalCount: 1,
-      lowCount: 3,
+      progress: 62,
+      criticalCount: 4,
+      lowCount: 1,
       createdAt: new Date().toISOString(),
     },
     {
-      id: 'demo-4',
+      id: 'scan-004',
       type: ScanType.REPO,
-      target: 'unknown/private-repo',
+      target: 'competitor-site/private-api',
       status: ScanStatus.FAILED,
-      progress: 10,
+      progress: 5,
       criticalCount: 0,
       lowCount: 0,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // 5 hours ago
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(), // 12 hours ago
+    },
+    {
+      id: 'scan-005',
+      type: ScanType.SEED,
+      target: 'open-source-foundation',
+      status: ScanStatus.QUEUED,
+      progress: 0,
+      criticalCount: 0,
+      lowCount: 0,
+      createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(), // 5 mins ago
     }
   ];
 
   const initialFindings: Finding[] = [
     {
-      id: 'find-1',
-      scanId: 'demo-1',
-      source: 'facebook/react',
-      filePath: 'packages/react-dom/src/server/ReactPartialRenderer.js',
-      secretType: 'AWS Access Key',
+      id: 'find-001',
+      scanId: 'scan-001',
+      source: 'personal-project/e-commerce-backend',
+      filePath: 'src/config/database.ts',
+      secretType: 'PostgreSQL Password',
       severity: Severity.CRITICAL,
-      lineNumber: 142,
-      snippet: 'const AWS_KEY = "AKIAIDOL7EXAMPLETK6A"',
+      lineNumber: 22,
+      snippet: 'const dbPassword = "super-secret-pw-123!";',
       engine: 'TruffleHog',
       timestamp: new Date().toISOString()
     },
     {
-      id: 'find-2',
-      scanId: 'demo-1',
-      source: 'facebook/react',
-      filePath: '.env.example',
-      secretType: 'GitHub Token',
+      id: 'find-002',
+      scanId: 'scan-001',
+      source: 'personal-project/e-commerce-backend',
+      filePath: '.env',
+      secretType: 'Stripe API Key',
       severity: Severity.CRITICAL,
-      lineNumber: 5,
-      snippet: 'GH_TOKEN=ghp_vH12n8Xn...',
+      lineNumber: 4,
+      snippet: 'STRIPE_SECRET=sk_live_51Mz...',
       engine: 'TruffleHog',
+      timestamp: new Date().toISOString()
+    },
+    {
+      id: 'find-003',
+      scanId: 'scan-002',
+      source: 'startup-inc-org',
+      filePath: 'infrastructure/terraform/vars.tf',
+      secretType: 'AWS Secret Access Key',
+      severity: Severity.CRITICAL,
+      lineNumber: 85,
+      snippet: 'default = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"',
+      engine: 'TruffleHog',
+      timestamp: new Date().toISOString()
+    },
+    {
+      id: 'find-004',
+      scanId: 'scan-002',
+      source: 'startup-inc-org',
+      filePath: 'docs/onboarding.md',
+      secretType: 'Internal Wiki Token',
+      severity: Severity.LOW,
+      lineNumber: 12,
+      snippet: 'Use token "TKN-998877" to access the internal docs.',
+      engine: 'Gitleaks',
       timestamp: new Date().toISOString()
     }
   ];
@@ -131,58 +165,44 @@ export const api = {
 
   simulateScanExecution: async (id: string) => {
     const scans = getStoredScans();
-    const scan = scans.find(s => s.id === id);
-    if (!scan) return;
+    const scanIndex = scans.findIndex(s => s.id === id);
+    if (scanIndex === -1) return;
 
     // Transition to RUNNING
-    scan.status = ScanStatus.RUNNING;
-    scan.progress = 20;
+    scans[scanIndex].status = ScanStatus.RUNNING;
+    scans[scanIndex].progress = 20;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(scans));
 
     // Simulate finding results
     setTimeout(() => {
-      const updatedScans = getStoredScans();
-      const s = updatedScans.find(job => job.id === id);
-      if (s) {
-        s.progress = 100;
-        s.status = ScanStatus.COMPLETED;
-        s.criticalCount = Math.floor(Math.random() * 5);
-        s.lowCount = Math.floor(Math.random() * 15);
+      const currentScans = getStoredScans();
+      const sIndex = currentScans.findIndex(job => job.id === id);
+      if (sIndex !== -1) {
+        currentScans[sIndex].progress = 100;
+        currentScans[sIndex].status = ScanStatus.COMPLETED;
+        currentScans[sIndex].criticalCount = Math.floor(Math.random() * 5);
+        currentScans[sIndex].lowCount = Math.floor(Math.random() * 15);
         
         // Generate findings
         const newFindings: Finding[] = [];
-        for (let i = 0; i < s.criticalCount; i++) {
+        for (let i = 0; i < currentScans[sIndex].criticalCount; i++) {
           newFindings.push({
             id: Math.random().toString(36).substr(2, 9),
             scanId: id,
-            source: s.target,
+            source: currentScans[sIndex].target,
             filePath: `src/auth/config_${i}.js`,
-            secretType: 'AWS Access Key',
+            secretType: 'API Key',
             severity: Severity.CRITICAL,
             lineNumber: 42,
-            snippet: 'const AWS_KEY = "AKIA****************"',
+            snippet: 'const KEY = "****************"',
             engine: 'TruffleHog',
-            timestamp: new Date().toISOString()
-          });
-        }
-        for (let i = 0; i < s.lowCount; i++) {
-          newFindings.push({
-            id: Math.random().toString(36).substr(2, 9),
-            scanId: id,
-            source: s.target,
-            filePath: `docs/test_env.md`,
-            secretType: 'Potential API Key',
-            severity: Severity.LOW,
-            lineNumber: 105,
-            snippet: 'export const DEV_KEY = "dummy-value"',
-            engine: 'Gitleaks',
             timestamp: new Date().toISOString()
           });
         }
         
         const existingFindings = getStoredFindings();
         localStorage.setItem(FINDINGS_KEY, JSON.stringify([...newFindings, ...existingFindings]));
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedScans));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(currentScans));
       }
     }, 3000);
   },

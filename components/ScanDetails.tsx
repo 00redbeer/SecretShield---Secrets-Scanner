@@ -8,7 +8,8 @@ import { ScanJob, Finding, Severity, ScanStatus } from '../types';
 const { useParams, Link } = ReactRouterDOM as any;
 
 const ScanDetails: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  // Fix: Removed generic type argument from untyped function call to resolve TypeScript error
+  const { id } = useParams();
   const [scan, setScan] = useState<ScanJob | null>(null);
   const [findings, setFindings] = useState<Finding[]>([]);
   const [filter, setFilter] = useState<'ALL' | Severity>('ALL');

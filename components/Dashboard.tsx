@@ -32,6 +32,40 @@ const Dashboard: React.FC = () => {
     low: s.lowCount
   }));
 
+  const getStatusBadge = (status: ScanStatus) => {
+    let styles = "";
+    let icon = "";
+    
+    switch (status) {
+      case ScanStatus.COMPLETED:
+        styles = "bg-green-500/10 text-green-500";
+        icon = "✅";
+        break;
+      case ScanStatus.RUNNING:
+        styles = "bg-blue-500/10 text-blue-500 animate-pulse";
+        icon = "🔄";
+        break;
+      case ScanStatus.QUEUED:
+        styles = "bg-amber-500/10 text-amber-500";
+        icon = "⏳";
+        break;
+      case ScanStatus.FAILED:
+        styles = "bg-red-500/10 text-red-500";
+        icon = "❌";
+        break;
+      default:
+        styles = "bg-slate-500/10 text-slate-400";
+        icon = "•";
+    }
+
+    return (
+      <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${styles}`}>
+        <span className="text-[12px] leading-none">{icon}</span>
+        {status}
+      </span>
+    );
+  };
+
   if (isLoading) {
     return <div className="text-center py-20 animate-pulse text-slate-400">Syncing with backend...</div>;
   }
@@ -136,13 +170,7 @@ const Dashboard: React.FC = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded-full text-[10px] font-bold ${
-                      scan.status === ScanStatus.COMPLETED ? 'bg-green-500/10 text-green-500' :
-                      scan.status === ScanStatus.RUNNING ? 'bg-blue-500/10 text-blue-500 animate-pulse' :
-                      'bg-slate-500/10 text-slate-400'
-                    }`}>
-                      {scan.status}
-                    </span>
+                    {getStatusBadge(scan.status)}
                   </td>
                   <td className="px-6 py-4 text-orange-500 font-bold">{scan.criticalCount}</td>
                   <td className="px-6 py-4 text-purple-400 font-bold">{scan.lowCount}</td>

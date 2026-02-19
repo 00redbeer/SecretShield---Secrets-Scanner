@@ -7,7 +7,88 @@ import { ScanJob, ScanType, ScanStatus, Finding, Severity } from '../types';
 const STORAGE_KEY = 'secret_shield_scans';
 const FINDINGS_KEY = 'secret_shield_findings';
 
+const SEED_DATA_KEY = 'secret_shield_seeded';
+
+const seedInitialData = () => {
+  if (localStorage.getItem(SEED_DATA_KEY)) return;
+
+  const initialScans: ScanJob[] = [
+    {
+      id: 'demo-1',
+      type: ScanType.REPO,
+      target: 'facebook/react',
+      status: ScanStatus.COMPLETED,
+      progress: 100,
+      criticalCount: 2,
+      lowCount: 5,
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
+    },
+    {
+      id: 'demo-2',
+      type: ScanType.SEED,
+      target: 'acme-corp-org',
+      status: ScanStatus.COMPLETED,
+      progress: 100,
+      criticalCount: 0,
+      lowCount: 12,
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
+    },
+    {
+      id: 'demo-3',
+      type: ScanType.UPLOAD,
+      target: 'legacy-backend.zip',
+      status: ScanStatus.RUNNING,
+      progress: 45,
+      criticalCount: 1,
+      lowCount: 3,
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: 'demo-4',
+      type: ScanType.REPO,
+      target: 'unknown/private-repo',
+      status: ScanStatus.FAILED,
+      progress: 10,
+      criticalCount: 0,
+      lowCount: 0,
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // 5 hours ago
+    }
+  ];
+
+  const initialFindings: Finding[] = [
+    {
+      id: 'find-1',
+      scanId: 'demo-1',
+      source: 'facebook/react',
+      filePath: 'packages/react-dom/src/server/ReactPartialRenderer.js',
+      secretType: 'AWS Access Key',
+      severity: Severity.CRITICAL,
+      lineNumber: 142,
+      snippet: 'const AWS_KEY = "AKIAIDOL7EXAMPLETK6A"',
+      engine: 'TruffleHog',
+      timestamp: new Date().toISOString()
+    },
+    {
+      id: 'find-2',
+      scanId: 'demo-1',
+      source: 'facebook/react',
+      filePath: '.env.example',
+      secretType: 'GitHub Token',
+      severity: Severity.CRITICAL,
+      lineNumber: 5,
+      snippet: 'GH_TOKEN=ghp_vH12n8Xn...',
+      engine: 'TruffleHog',
+      timestamp: new Date().toISOString()
+    }
+  ];
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(initialScans));
+  localStorage.setItem(FINDINGS_KEY, JSON.stringify(initialFindings));
+  localStorage.setItem(SEED_DATA_KEY, 'true');
+};
+
 const getStoredScans = (): ScanJob[] => {
+  seedInitialData();
   const data = localStorage.getItem(STORAGE_KEY);
   if (!data) return [];
   const scans: ScanJob[] = JSON.parse(data);
